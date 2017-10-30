@@ -1,6 +1,7 @@
 const express = require('express');
 const request = require('request');
 const hbs = require('express-handlebars');
+const uuid = require('uuid/v4');
 
 const app = express();
 app.engine('.hbs', hbs({ extname: '.hbs' }));
@@ -8,9 +9,13 @@ app.set('view engine', '.hbs');
 
 const E_UNABLE_TO_PARSE = 'Bad Request: unable to parse result.';
 
+const clientId = process.env['CLIENT_ID'] || 'DE516D90-B63E-4994-BA64-881EA988A9D2';
 const clientSecret = process.env['CLIENT_SECRET'] || process.env.clientSecret;
-const port = process.env.PORT || process.env.port;
-let host = process.env.HOST || process.env.host;
+const port = process.env['SERVER_PORT'] || process.env.port;
+let host = process.env['WEBSITE_HOSTNAME'] || process.env.host;
+let getHostUri = () => `https://${host}/`;
+let getFullUriForPath = path => getHostUri() + path;
+let getCallbackUri = () => getFullUriForPath('oauth-callback');
 
 // validate critical variables
 if (!clientSecret) {
@@ -42,7 +47,7 @@ app.use((req, res, next) => {
     next();
 });
 
-const getFormBody = (assertion, grantType) => `client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=${clientSecret}&grant_type=${grantType}&assertion=${assertion}&redirect_uri=https://${host}/oauth-callback`;
+const getFormBody = (assertion, grantType) => `client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=${clientSecret}&grant_type=${grantType}&assertion=${assertion}&redirect_uri=${getCallbackUri()}`;
 const getFormBodyForAuthorization = assertion => getFormBody(assertion, 'urn:ietf:params:oauth:grant-type:jwt-bearer');
 const getFormBodyForRefresh = assertion => getFormBody(assertion, 'refresh_token');
 const processQuery = (req, res, next) => {
@@ -104,6 +109,14 @@ app.post('token-refresh', processQuery, (req, res, next) => {
     let result = getProperty(OAUTH_RESULT);
     res.setHeader('Content-Encoding', 'application/json');
     res.status(200).send(result);
+});
+
+app.get('/', (req, res) => {
+    res.render('welcome', {
+        clientId: clientId,
+        state: uuid(),
+        redirectUri: getCallbackUri()
+    });
 });
 
 app.listen(port, () => {
