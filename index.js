@@ -11,7 +11,7 @@ const E_UNABLE_TO_PARSE = 'Bad Request: unable to parse result.';
 
 const clientId = process.env['CLIENT_ID'] || 'DE516D90-B63E-4994-BA64-881EA988A9D2';
 const clientSecret = process.env['CLIENT_SECRET'] || process.env.clientSecret;
-const port = process.env['PORT'];
+const port = process.env['DEV'] ? '8888' : null;
 let host = process.env['WEBSITE_HOSTNAME'] || process.env.host;
 let getHostUri = () => `https://${host}/`;
 let getFullUriForPath = path => getHostUri() + path;
