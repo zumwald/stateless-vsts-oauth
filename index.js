@@ -11,7 +11,7 @@ const E_UNABLE_TO_PARSE = 'Bad Request: unable to parse result.';
 
 const clientId = process.env['CLIENT_ID'] || 'DE516D90-B63E-4994-BA64-881EA988A9D2';
 const clientSecret = process.env['CLIENT_SECRET'] || process.env.clientSecret;
-const port = process.env['SERVER_PORT'] || process.env.port;
+const port = process.env['PORT'];
 let host = process.env['WEBSITE_HOSTNAME'] || process.env.host;
 let getHostUri = () => `https://${host}/`;
 let getFullUriForPath = path => getHostUri() + path;
@@ -21,13 +21,10 @@ let getCallbackUri = () => getFullUriForPath('oauth-callback');
 if (!clientSecret) {
     throw new Error('Missing CLIENT_SECRET variable!');
 }
-if (!port) {
-    throw new Error('Missing PORT variable!');
-}
 if (!host) {
     throw new Error('Missing HOST variable!')
 } else {
-    host = port === 443 ? host : host + ':' + port;
+    host = !port ? host : host + ':' + port;
     console.log('set "host" to', host);
 }
 
