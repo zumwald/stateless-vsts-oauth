@@ -101,7 +101,7 @@ app.get('/oauth-callback', processQuery, (req, res, next) => {
     });
 });
 
-app.post('token-refresh', processQuery, (req, res, next) => {
+app.post('/token-refresh', processQuery, (req, res, next) => {
     let formData = getFormBodyForRefresh(req.query.code);
     setProperty(FORM_DATA, formData);
     next();
