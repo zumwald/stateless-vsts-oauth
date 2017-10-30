@@ -1,0 +1,15 @@
+{
+  "name": "stateless-vsts-oauth",
+  "version": "1.0.0",
+  "description": "stateless oauth service, performs the bare minimum oauth handshake with VSTS and then renders a refresh_token for the user to save for future use",
+  "main": "index.js",
+  "repository": "https://github.com/zumwald/better-vsts-npm-auth.git",
+  "author": "Daniel Zumwalt <daniel.zumwalt@moutlook.com>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "express": "^4.16.2",
+    "express-handlebars": "^3.0.0",
+    "request": "^2.83.0"
+  }
+}
