@@ -31,6 +31,7 @@ if (!host) {
     console.log('set "host" to', host);
 }
 
+// propertybag getter & setter
 let getProperty;
 let setProperty;
 // property keys
