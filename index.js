@@ -3,9 +3,7 @@ const request = require('request');
 const hbs = require('express-handlebars');
 const uuid = require('uuid/v4');
 
-const app = express();
-app.engine('.hbs', hbs({ extname: '.hbs' }));
-app.set('view engine', '.hbs');
+
 
 const E_UNABLE_TO_PARSE = 'Bad Request: unable to parse result.';
 
@@ -39,14 +37,15 @@ const OAUTH_RESULT = 'oauth_result';
 const FORM_DATA = 'form_data';
 
 // set up middleware for propertybag
-app.use((req, res, next) => {
+
+const addPropertyBagMiddleware = (req, res, next) => {
     res.propertyBag = res.propertyBag || {};
 
     getProperty = key => res.propertyBag[key];
     setProperty = (key, val) => res.propertyBag[key] = val;
 
     next();
-});
+}
 
 const getFormBody = (assertion, grantType) => `client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=${clientSecret}&grant_type=${grantType}&assertion=${assertion}&redirect_uri=${getCallbackUri()}`;
 const getFormBodyForAuthorization = assertion => getFormBody(assertion, 'urn:ietf:params:oauth:grant-type:jwt-bearer');
@@ -58,6 +57,14 @@ const processQuery = (req, res, next) => {
         next();
     }
 };
+
+function getAndSetFormDataCallback(callback) {
+    return function (req, res, next) {
+        let property = callback(req.query.code);
+        setProperty(FORM_DATA, property);
+        next();
+    }
+}
 
 const handleVstsOauth = (req, res, next) => {
     request.post({
@@ -90,35 +97,49 @@ const handleVstsOauth = (req, res, next) => {
     });
 };
 
-app.get('/oauth-callback', processQuery, (req, res, next) => {
-    let formData = getFormBodyForAuthorization(req.query.code);
-    setProperty(FORM_DATA, formData);
-    next();
-}, handleVstsOauth, (req, res) => {
-    let result = getProperty(OAUTH_RESULT);
 
-    res.render('token', {
-        refreshToken: result['refresh_token']
-    });
-});
+let oauthCallbacks = [
+    processQuery,
+    getAndSetFormDataCallback(getFormBodyForAuthorization),
+    handleVstsOauth,
+    (req, res) => {
+        let result = getProperty(OAUTH_RESULT);
 
-app.post('/token-refresh', processQuery, (req, res, next) => {
-    let formData = getFormBodyForRefresh(req.query.code);
-    setProperty(FORM_DATA, formData);
-    next();
-}, handleVstsOauth, (req, res) => {
-    let result = getProperty(OAUTH_RESULT);
-    res.setHeader('Content-Encoding', 'application/json');
-    res.status(200).send(result);
-});
+        res.render('token', {
+            refreshToken: result['refresh_token']
+        });
+    }
+];
 
-app.get('/', (req, res) => {
+let tokenRefreshCallbacks = [
+    processQuery,
+    getAndSetFormDataCallback(getFormBodyForRefresh),
+    handleVstsOauth,
+    (req, res) => {
+        let result = getProperty(OAUTH_RESULT);
+        res.setHeader('Content-Encoding', 'application/json');
+        res.status(200).send(result);
+    }
+];
+
+let renderCallbacks = [(req, res) => {
     res.render('welcome', {
         clientId: clientId,
         state: uuid(),
         redirectUri: getCallbackUri()
     });
-});
+}]
+
+const app = express();
+app.engine('.hbs', hbs({
+    extname: '.hbs'
+}));
+app.set('view engine', '.hbs');
+app.use(addPropertyBagMiddleware);
+
+app.get('/oauth-callback', ...oauthCallbacks);
+app.get('/token-refresh', ...tokenRefreshCallbacks)
+app.get('/', ...renderCallbacks);
 
 app.listen(port, () => {
     console.log(`app listening on port ${port}!`)
