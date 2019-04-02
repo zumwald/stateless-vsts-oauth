@@ -168,7 +168,7 @@ function configureApp(
 }) {
     let {
         middleware,
-        callbacks
+        routes
     } = getExpressRoutes({
         clientId,
         clientSecret,
@@ -183,14 +183,18 @@ function configureApp(
     app.set('view engine', '.hbs');
     app.use(...middleware);
 
-    app.get('/oauth-callback', ...callbacks.oauthCallbacks);
-    app.get('/token-refresh', ...callbacks.tokenRefreshCallbacks)
-    app.get('/', ...callbacks.renderCallbacks);
+    app.get(routes.oauth.route, ...routes.oauth.callbacks);
+    app.get(routes.tokenRefresh.route, ...routes.tokenRefresh.callbacks);
+    app.get(routes.render.route, ...routes.render.callbacks);
 
     return app;
 }
 
-
 configureApp().listen(port, () => {
     console.log(`app listening on port ${port}!`)
 });
+
+module.exports = {
+    getExpressRoutes,
+    configureApp
+}
