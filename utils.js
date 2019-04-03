@@ -20,6 +20,7 @@ function getExpressRoutes({
     clientSecret = defaultClientSecret,
     port = defaultPort,
     host = defaultHost,
+    layoutsDir
 } = {}) {
     // validate critical variables
     if (!clientSecret) {
@@ -115,6 +116,7 @@ function getExpressRoutes({
             let result = res.locals.getProperty(OAUTH_RESULT);
 
             res.render('token', {
+                layoutsDir,
                 refreshToken: result['refresh_token']
             });
         }
@@ -133,6 +135,7 @@ function getExpressRoutes({
 
     let renderCallbacks = [(req, res) => {
         res.render('welcome', {
+            layoutsDir,
             clientId: clientId,
             state: uuid(),
             redirectUri: callbackUri
@@ -167,7 +170,8 @@ function configureApp({
     clientId = defaultClientId,
     clientSecret = defaultClientSecret,
     port = defaultPort,
-    host = defaultHost
+    host = defaultHost,
+    layoutsDir
 } = {}) {
     let {
         config,
@@ -177,7 +181,8 @@ function configureApp({
         clientId,
         clientSecret,
         port,
-        host
+        host,
+        layoutsDir
     });
 
     app.engine('.hbs', hbs({
