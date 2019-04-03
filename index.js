@@ -1,5 +1,14 @@
-const { configureApp } = require('./utils');
+const {
+    configureApp
+} = require('./utils');
 
-configureApp().listen(port, () => {
+const {
+    app,
+    config: {
+        port
+    }
+} = configureApp();
+
+app.listen(port, () => {
     console.log(`app listening on port ${port}!`)
 });

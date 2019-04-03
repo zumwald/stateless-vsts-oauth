@@ -141,6 +141,10 @@ function getExpressRoutes({
     }]
 
     return {
+        config: {
+            host,
+            port
+        },
         middleware: [addPropertyBagMiddleware],
         routes: {
             oauth: {
@@ -160,13 +164,14 @@ function getExpressRoutes({
 };
 
 function configureApp({
-        app = express(),
-        clientId = defaultClientId,
-        clientSecret = defaultClientSecret,
-        port = defaultPort,
-        host = defaultHost
-    } = {}) {
+    app = express(),
+    clientId = defaultClientId,
+    clientSecret = defaultClientSecret,
+    port = defaultPort,
+    host = defaultHost
+} = {}) {
     let {
+        config,
         middleware,
         routes
     } = getExpressRoutes({
@@ -187,7 +192,10 @@ function configureApp({
     app.get(routes.tokenRefresh.route, ...routes.tokenRefresh.callbacks);
     app.get(routes.render.route, ...routes.render.callbacks);
 
-    return app;
+    return {
+        app,
+        config
+    };
 }
 
 module.exports = {
