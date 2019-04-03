@@ -38,9 +38,6 @@ function getExpressRoutes({
     let hostUri = `https://${host}/`;
     let callbackUri = (new URL(oauthRoute, hostUri)).toString();
 
-    // propertybag getter & setter
-    let getProperty;
-    let setProperty;
     // property keys
     const OAUTH_RESULT = 'oauth_result';
     const FORM_DATA = 'form_data';
@@ -50,8 +47,11 @@ function getExpressRoutes({
     const addPropertyBagMiddleware = (req, res, next) => {
         res.propertyBag = res.propertyBag || {};
 
-        getProperty = key => res.propertyBag[key];
-        setProperty = (key, val) => res.propertyBag[key] = val;
+        const getProperty = key => res.propertyBag[key];
+        res.locals.getProperty = getProperty;
+        
+        const setProperty = (key, val) => res.propertyBag[key] = val;
+        res.locals.setProperty = setProperty;
 
         next();
     }
@@ -70,7 +70,7 @@ function getExpressRoutes({
     function getAndSetFormDataCallback(callback) {
         return function (req, res, next) {
             let property = callback(req.query.code);
-            setProperty(FORM_DATA, property);
+            res.locals.setProperty(FORM_DATA, property);
             next();
         }
     }
@@ -78,7 +78,7 @@ function getExpressRoutes({
     const handleVstsOauth = (req, res, next) => {
         request.post({
             url: 'https://app.vssps.visualstudio.com/oauth2/token',
-            body: getProperty(FORM_DATA),
+            body: res.locals.getProperty(FORM_DATA),
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
@@ -96,7 +96,7 @@ function getExpressRoutes({
                         res.status(400).send(body);
                     } else {
                         // stuff successful result into propertybag
-                        setProperty(OAUTH_RESULT, result);
+                        res.locals.setProperty(OAUTH_RESULT, result);
                         next();
                     }
                 } catch (e) {
@@ -112,7 +112,7 @@ function getExpressRoutes({
         getAndSetFormDataCallback(getFormBodyForAuthorization),
         handleVstsOauth,
         (req, res) => {
-            let result = getProperty(OAUTH_RESULT);
+            let result = res.locals.getProperty(OAUTH_RESULT);
 
             res.render('token', {
                 refreshToken: result['refresh_token']
@@ -125,7 +125,7 @@ function getExpressRoutes({
         getAndSetFormDataCallback(getFormBodyForRefresh),
         handleVstsOauth,
         (req, res) => {
-            let result = getProperty(OAUTH_RESULT);
+            let result = res.locals.getProperty(OAUTH_RESULT);
             res.setHeader('Content-Encoding', 'application/json');
             res.status(200).send(result);
         }
