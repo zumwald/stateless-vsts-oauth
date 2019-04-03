@@ -11,6 +11,7 @@ const defaultClientId = process.env['CLIENT_ID'] || 'DE516D90-B63E-4994-BA64-881
 const defaultClientSecret = process.env['CLIENT_SECRET'] || process.env.clientSecret;
 const defaultPort = process.env['SERVER_PORT'] || process.env.port;
 let defaultHost = process.env['WEBSITE_HOSTNAME'] || process.env.host;
+const defaultViewsDir = `${__dirname}/views`;
 
 function getExpressRoutes({
     oauthRoute = '/oauth-callback',
@@ -20,7 +21,6 @@ function getExpressRoutes({
     clientSecret = defaultClientSecret,
     port = defaultPort,
     host = defaultHost,
-    layoutsDir
 } = {}) {
     // validate critical variables
     if (!clientSecret) {
@@ -50,7 +50,7 @@ function getExpressRoutes({
 
         const getProperty = key => res.propertyBag[key];
         res.locals.getProperty = getProperty;
-        
+
         const setProperty = (key, val) => res.propertyBag[key] = val;
         res.locals.setProperty = setProperty;
 
@@ -116,7 +116,6 @@ function getExpressRoutes({
             let result = res.locals.getProperty(OAUTH_RESULT);
 
             res.render('token', {
-                layoutsDir,
                 refreshToken: result['refresh_token']
             });
         }
@@ -135,7 +134,6 @@ function getExpressRoutes({
 
     let renderCallbacks = [(req, res) => {
         res.render('welcome', {
-            layoutsDir,
             clientId: clientId,
             state: uuid(),
             redirectUri: callbackUri
@@ -171,7 +169,7 @@ function configureApp({
     clientSecret = defaultClientSecret,
     port = defaultPort,
     host = defaultHost,
-    layoutsDir
+    viewsDir = defaultViewsDir
 } = {}) {
     let {
         config,
@@ -182,9 +180,10 @@ function configureApp({
         clientSecret,
         port,
         host,
-        layoutsDir
+        viewsDir
     });
 
+    app.set('views', viewsDir);
     app.engine('.hbs', hbs({
         extname: '.hbs'
     }));
