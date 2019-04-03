@@ -20,7 +20,7 @@ function getExpressRoutes({
     clientSecret = defaultClientSecret,
     port = defaultPort,
     host = defaultHost,
-}) {
+} = {}) {
     let hostUri = `https://${host}/`;
     let getFullUriForPath = path => (new URL(path, hostUri)).toString();
     let getCallbackUri = () => getFullUriForPath(oauthRoute);
@@ -159,13 +159,13 @@ function getExpressRoutes({
     }
 };
 
-function configureApp(
-    app = express(), {
-    clientId = defaultClientId,
-    clientSecret = defaultClientSecret,
-    port = defaultPort,
-    host = defaultHost
-}) {
+function configureApp({
+        app = express(),
+        clientId = defaultClientId,
+        clientSecret = defaultClientSecret,
+        port = defaultPort,
+        host = defaultHost
+    } = {}) {
     let {
         middleware,
         routes
