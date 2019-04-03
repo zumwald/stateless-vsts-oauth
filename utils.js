@@ -21,10 +21,6 @@ function getExpressRoutes({
     port = defaultPort,
     host = defaultHost,
 } = {}) {
-    let hostUri = `https://${host}/`;
-    let getFullUriForPath = path => (new URL(path, hostUri)).toString();
-    let getCallbackUri = () => getFullUriForPath(oauthRoute);
-
     // validate critical variables
     if (!clientSecret) {
         throw new Error('Missing CLIENT_SECRET variable!');
@@ -38,6 +34,9 @@ function getExpressRoutes({
         host = process.env.DEV ? host + ':' + port : host;
         console.log('set "host" to', host);
     }
+
+    let hostUri = `https://${host}/`;
+    let callbackUri = (new URL(oauthRoute, hostUri)).toString();
 
     // propertybag getter & setter
     let getProperty;
@@ -57,7 +56,7 @@ function getExpressRoutes({
         next();
     }
 
-    const getFormBody = (assertion, grantType) => `client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=${clientSecret}&grant_type=${grantType}&assertion=${assertion}&redirect_uri=${getCallbackUri()}`;
+    const getFormBody = (assertion, grantType) => `client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=${clientSecret}&grant_type=${grantType}&assertion=${assertion}&redirect_uri=${callbackUri}`;
     const getFormBodyForAuthorization = assertion => getFormBody(assertion, 'urn:ietf:params:oauth:grant-type:jwt-bearer');
     const getFormBodyForRefresh = assertion => getFormBody(assertion, 'refresh_token');
     const processQuery = (req, res, next) => {
@@ -136,7 +135,7 @@ function getExpressRoutes({
         res.render('welcome', {
             clientId: clientId,
             state: uuid(),
-            redirectUri: getCallbackUri()
+            redirectUri: callbackUri
         });
     }]
 
